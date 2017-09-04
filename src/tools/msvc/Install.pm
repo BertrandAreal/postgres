@@ -302,7 +302,7 @@ sub CopySolutionOutput
 			elsif ($1 eq 'DynamicLibrary')
 			{
 				push(@{ $install_list{'lib'} }, "dll");
-				if ($is_sharedlib)
+				if ($is_sharedlib || -e "$conf\\$pf\\$pf.lib")
 				{
 					push(@{ $install_list{'bin'} }, "dll");
 					push(@{ $install_list{'lib'} }, "lib");

@@ -168,11 +168,45 @@ sub mkvcbuild
 	$postgres->AddLibrary('wldap32.lib') if ($solution->{options}->{ldap});
 	$postgres->FullExportDLL('postgres.lib');
 
+   #Some postgres extension use to link with postgres.exe but it doesn't work any more on windows 10
+   #add a project postgres.dll in order to solve that
+ 	my $postgreslib = $solution->AddProject('postgreslib', 'dll', '', 'src/backend');
+	$postgreslib->AddIncludeDir('src/backend');
+	$postgreslib->AddDir('src/backend/port/win32');
+	$postgreslib->AddFile('src/backend/utils/fmgrtab.c');
+	$postgreslib->ReplaceFile(
+		'src/backend/port/dynloader.c',
+		'src/backend/port/dynloader/win32.c');
+	$postgreslib->ReplaceFile('src/backend/port/pg_sema.c',
+		'src/backend/port/win32_sema.c');
+	$postgreslib->ReplaceFile('src/backend/port/pg_shmem.c',
+		'src/backend/port/win32_shmem.c');
+	$postgreslib->AddFiles('src/port',   @pgportfiles);
+	$postgreslib->AddFiles('src/common', @pgcommonbkndfiles);
+	$postgreslib->AddDir('src/timezone');
+
+	# We need source files from src/timezone, but that directory's resource
+	# file pertains to "zic", not to the backend.
+	$postgreslib->RemoveFile('src/timezone/win32ver.rc');
+	$postgreslib->AddFiles('src/backend/parser', 'scan.l', 'gram.y');
+	$postgreslib->AddFiles('src/backend/bootstrap', 'bootscanner.l',
+		'bootparse.y');
+	$postgreslib->AddFiles('src/backend/utils/misc', 'guc-file.l');
+	$postgreslib->AddFiles(
+		'src/backend/replication', 'repl_scanner.l',
+		'repl_gram.y',             'syncrep_scanner.l',
+		'syncrep_gram.y');
+	$postgreslib->AddDefine('BUILDING_DLL');
+	$postgreslib->AddLibrary('secur32.lib');
+	$postgreslib->AddLibrary('ws2_32.lib');
+	$postgreslib->AddLibrary('wldap32.lib') if ($solution->{options}->{ldap});
+
    # The OBJS scraper doesn't know about ifdefs, so remove be-secure-openssl.c
    # if building without OpenSSL
 	if (!$solution->{options}->{openssl})
 	{
 		$postgres->RemoveFile('src/backend/libpq/be-secure-openssl.c');
+		$postgreslib->RemoveFile('src/backend/libpq/be-secure-openssl.c');
 	}
 
 	my $snowball = $solution->AddProject('dict_snowball', 'dll', '',
