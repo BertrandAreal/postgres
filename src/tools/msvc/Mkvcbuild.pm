@@ -170,7 +170,7 @@ sub mkvcbuild
 
    #Some postgres extension use to link with postgres.exe but it doesn't work any more on windows 10
    #add a project postgres.dll in order to solve that
- 	my $postgreslib = $solution->AddProject('postgreslib', 'dll', '', 'src/backend');
+ 	my $postgreslib = $solution->AddProject('postgreslib', 'lib', '', 'src/backend');
 	$postgreslib->AddIncludeDir('src/backend');
 	$postgreslib->AddDir('src/backend/port/win32');
 	$postgreslib->AddFile('src/backend/utils/fmgrtab.c');
@@ -197,6 +197,7 @@ sub mkvcbuild
 		'repl_gram.y',             'syncrep_scanner.l',
 		'syncrep_gram.y');
 	$postgreslib->AddDefine('BUILDING_DLL');
+	$postgreslib->AddDefine('NOMAIN');
 	$postgreslib->AddLibrary('secur32.lib');
 	$postgreslib->AddLibrary('ws2_32.lib');
 	$postgreslib->AddLibrary('wldap32.lib') if ($solution->{options}->{ldap});

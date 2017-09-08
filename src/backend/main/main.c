@@ -56,6 +56,8 @@ static void check_root(const char *progname);
 /*
  * Any Postgres server process begins execution here.
  */
+
+#ifndef NOMAIN
 int
 main(int argc, char *argv[])
 {
@@ -228,7 +230,7 @@ main(int argc, char *argv[])
 		PostmasterMain(argc, argv);		/* does not return */
 	abort();					/* should not get here */
 }
-
+#endif
 
 
 /*
